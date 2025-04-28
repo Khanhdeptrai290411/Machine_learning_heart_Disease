@@ -1,0 +1,14 @@
+patientid
+age
+gender	
+chestpain	
+restingBP	
+serumcholestrol	
+fastingbloodsugar	
+restingrelectro	
+maxheartrate	
+exerciseangia	
+oldpeak	
+slope	
+noofmajorvessels	
+target
