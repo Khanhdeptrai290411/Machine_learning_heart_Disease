@@ -163,3 +163,35 @@ print("Kết quả đã được lưu vào 'cross_dataset_evaluation_results.csv
 # Hiển thị kết quả
 print("\nKết quả đánh giá:")
 print(results_df)
+
+# Xác định feature quan trọng
+import matplotlib.pyplot as plt
+
+# Cho Random Forest và XGBoost
+def plot_feature_importances(model, feature_names, model_name):
+    if hasattr(model, 'feature_importances_'):
+        importances = model.feature_importances_
+    elif isinstance(model, xgb.Booster):
+        importances = model.get_score(importance_type='weight')
+        importances = {feature: importances.get(feature, 0) for feature in feature_names}
+        importances = np.array(list(importances.values()))
+    else:
+        print(f"Model {model_name} không hỗ trợ feature importance.")
+        return
+
+    sorted_idx = np.argsort(importances)[::-1]
+    top_features = [feature_names[i] for i in sorted_idx[:10]]  # Top 10 features
+    top_importances = importances[sorted_idx[:10]]
+    
+    plt.figure(figsize=(10,6))
+    plt.barh(top_features[::-1], top_importances[::-1])  # plot ngược cho đẹp
+    plt.xlabel('Feature Importance')
+    plt.title(f'Feature Importance - {model_name}')
+    plt.show()
+    
+    # In ra bảng luôn cho dễ copy
+    for f, imp in zip(top_features, top_importances):
+        print(f"{f}: {imp:.4f}")
+
+# Ví dụ sử dụng:
+plot_feature_importances(model, common_features, model_name)
