@@ -8,31 +8,31 @@ sns.set(style="white")
 
 # Đọc dữ liệu từ các file CSV
 try:
-    uci_data = pd.read_csv('model_comparison_results(3).csv')
-    cdd_data = pd.read_csv('model_comparison_results_CDD.csv')
-    cross_data = pd.read_csv('cross_dataset_evaluation_results.csv')
+    uci_data = pd.read_csv('model_comparison_results(test_300).csv')
+    cdd_data = pd.read_csv('History_CDD\model_comparison_results_CDD(3).csv')
+    cross_data = pd.read_csv('cross_History\cross_dataset_evaluation_results(3).csv')
 except FileNotFoundError as e:
     print(f"Error: File not found - {e}")
     exit(1)
 
 # Debug: In tên cột để kiểm tra
-print("Columns in model_comparison_results(3).csv:", uci_data.columns.tolist())
-print("Columns in model_comparison_results_CDD.csv:", cdd_data.columns.tolist())
-print("Columns in cross_dataset_evaluation_results.csv:", cross_data.columns.tolist())
+print("Columns in model_comparison_results(300).csv:", uci_data.columns.tolist())
+print("Columns in model_comparison_results_CDD(3).csv:", cdd_data.columns.tolist())
+print("Columns in cross_dataset_evaluation_results(3).csv:", cross_data.columns.tolist())
 
 # Chuẩn hóa tên mô hình để dễ hiển thị
 model_name_mapping = {
-    'random_forest_model_UCI(CV).pkl': 'RF_UCI',
-    'svm_model_ML(2).pkl': 'SVM_UCI',
-    'xgboost_model_UCI(have_CV(1)).json': 'XGB_UCI',
-    'random_forest_model_CDD(CV).pkl': 'RF_CDD',
-    'svm_model_CDD(CV).pkl': 'SVM_CDD',
-    'xgboost_model_CDD(no_CV(1)).json': 'XGB_CDD',
+    'logistic_regression_model_ML(300).pkl': 'LG_UCI',
+    'svm_model.pkl': 'SVM_UCI',
+    'xgboost_model.json': 'XGB_UCI',
+    'logistic_regression_model_ML(CDD2).pkl': 'LG_CDD',
+    'svm_model_CDD(final).pkl': 'SVM_CDD',
+    'xgboost_model_CDD(final).json': 'XGB_CDD',
     'CDD_SVM': 'SVM_CDD',
-    'CDD_RF': 'RF_CDD',
+    'CDD_LG': 'LG_CDD',
     'CDD_XGB': 'XGB_CDD',
     'UCI_SVM': 'SVM_UCI',
-    'UCI_RF': 'RF_UCI',
+    'UCI_LG': 'LG_UCI',
     'UCI_XGB': 'XGB_UCI'
 }
 
@@ -104,7 +104,7 @@ ax.legend(title="Metrics", fontsize=10)
 ax.grid(False)  # Không hiển thị lưới
 
 plt.tight_layout()
-plt.savefig('model_performance_comparison.png')
+plt.savefig('model_performance_comparison4.png')
 plt.close()
 
 # In thông báo

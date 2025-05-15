@@ -7,7 +7,7 @@ import seaborn as sns
 sns.set(style="white")
 
 # Đọc dữ liệu từ file CSV
-df_results = pd.read_csv("model_comparison_results.csv")
+df_results = pd.read_csv("model_comparison_results(test_300).csv")
 
 # Danh sách các mô hình (rút gọn tên để dễ đọc)
 models = df_results["Model"].str.replace("model_ML", "").str.replace(".pkl", "").str.replace(".json", "").str.replace("decision_tree_", "DT_").str.replace("knn_", "KNN_").str.replace("logistic_regression_", "LR_").str.replace("random_forest_", "RF_").str.replace("svm_", "SVM_").str.replace("xgboost_", "XGB_").str.replace("(2)", "").str.replace("(3)", "")

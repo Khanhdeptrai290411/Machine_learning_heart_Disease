@@ -12,9 +12,9 @@ warnings.filterwarnings("ignore")
 
 # Danh sách các mô hình cần test
 model_paths = [
-    r"CDD_Model\random_forest_model_CDD(CV).pkl",
-    r"CDD_Model\svm_model_CDD(CV).pkl",
-    r"CDD_Model\xgboost_model_CDD(no_CV(1)).json",
+    r"CDD_Model\logistic_regression_model_ML(CDD2).pkl",
+    r"CDD_Model\svm_model_CDD(final).pkl",
+    r"CDD_Model\xgboost_model_CDD(final).json",
 ]
 # Load dữ liệu test
 test_data = pd.read_csv("Data/Cardiovascular_Disease_Dataset.csv")
@@ -95,4 +95,4 @@ for model_path in model_paths:
 # Tạo DataFrame kết quả
 df_results = pd.DataFrame(results)
 print(df_results)
-df_results.to_csv("model_comparison_results_CDD.csv", index=False)
+df_results.to_csv("model_comparison_results_CDD(3).csv", index=False)

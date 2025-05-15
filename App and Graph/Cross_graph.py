@@ -7,15 +7,15 @@ import seaborn as sns
 sns.set(style="white")
 
 # Đọc dữ liệu
-cross_data = pd.read_csv('cross_dataset_evaluation_results.csv')
+cross_data = pd.read_csv('cross_History\cross_dataset_evaluation_results(3).csv')
 
 # Nếu cần chuẩn hóa tên Model (có thể bỏ qua nếu tên đã OK)
 model_name_mapping = {
     'CDD_SVM': 'SVM_CDD',
-    'CDD_RF': 'RF_CDD',
+    'CDD_LG': 'LG_CDD',
     'CDD_XGB': 'XGB_CDD',
     'UCI_SVM': 'SVM_UCI',
-    'UCI_RF': 'RF_UCI',
+    'UCI_LG': 'LG_UCI',
     'UCI_XGB': 'XGB_UCI'
 }
 cross_data['Model'] = cross_data['Model'].map(model_name_mapping)
@@ -54,7 +54,7 @@ ax.legend(title="Metrics", fontsize=10)
 ax.grid(False)
 
 plt.tight_layout()
-plt.savefig('cross_model_performance_comparison.png')
+plt.savefig('cross_model_performance_comparison4.png')
 plt.close()
 
 print("Biểu đồ đã được lưu vào 'cross_model_performance_comparison.png'")

@@ -37,11 +37,16 @@ def align_features(df_cdd, df_uci):
     # Đặc trưng cho UCI (bao gồm 'thal')
     uci_model_features = [feature_mapping.get(f, f) for f in common_features] + ['thal']
     
+    # Đặc trưng cho CDD_SVM (giả sử tất cả đặc trưng CDD + một đặc trưng giả để đủ 13)
+    cdd_model_features = cdd_features 
+    
     # In ra các đặc trưng để debug
     print("Các đặc trưng chung (cho CDD):", common_features)
     print("Số đặc trưng chung:", len(common_features))
     print("Các đặc trưng cho mô hình UCI:", uci_model_features)
     print("Số đặc trưng cho mô hình UCI:", len(uci_model_features))
+    print("Các đặc trưng cho mô hình CDD:", cdd_model_features)
+    print("Số đặc trưng cho mô hình CDD:", len(cdd_model_features))
     
     # Chuẩn bị dữ liệu cho CDD
     cdd_X = df_cdd[common_features]
@@ -56,13 +61,20 @@ def align_features(df_cdd, df_uci):
     cdd_X_for_uci['thal'] = 0  # Gán giá trị giả
     cdd_X_for_uci.columns = uci_model_features  # Đổi tên cột sang tên UCI
     
+    # Thêm cột giả cho uci_X để khớp với CDD_SVM (13 đặc trưng)
+    uci_X_for_cdd = uci_X.copy()
+
+    uci_X_for_cdd.columns = cdd_model_features  # Đổi tên cột sang tên CDD
+    
     # Đảm bảo số cột khớp
     if len(common_features) != uci_X.shape[1]:
         raise ValueError(f"Số đặc trưng không khớp: common_features ({len(common_features)}) != uci_X ({uci_X.shape[1]})")
     if len(uci_model_features) != cdd_X_for_uci.shape[1]:
         raise ValueError(f"Số đặc trưng không khớp: uci_model_features ({len(uci_model_features)}) != cdd_X_for_uci ({cdd_X_for_uci.shape[1]})")
+    if len(cdd_model_features) != uci_X_for_cdd.shape[1]:
+        raise ValueError(f"Số đặc trưng không khớp: cdd_model_features ({len(cdd_model_features)}) != uci_X_for_cdd ({uci_X_for_cdd.shape[1]})")
     
-    return cdd_X, cdd_y, uci_X, uci_y, common_features, cdd_X_for_uci, uci_model_features
+    return cdd_X, cdd_y, uci_X, uci_y, common_features, cdd_X_for_uci, uci_model_features, uci_X_for_cdd, cdd_model_features
 
 # Hàm đánh giá mô hình
 def evaluate_model(model, X_test, y_test, model_name, dataset_name):
@@ -70,8 +82,11 @@ def evaluate_model(model, X_test, y_test, model_name, dataset_name):
     if 'SVM' in model_name and 'CDD' in model_name:
         # CDD_SVM được huấn luyện không có tên đặc trưng
         X_test_np = X_test.values if isinstance(X_test, pd.DataFrame) else X_test
+    elif 'RF' in model_name and 'CDD' in model_name:
+        # CDD_RF được huấn luyện không có tên đặc trưng
+        X_test_np = X_test.values if isinstance(X_test, pd.DataFrame) else X_test
     else:
-        # UCI_SVM và các mô hình khác được huấn luyện với tên đặc trưng
+        # UCI_SVM, UCI_RF, và các mô hình khác được huấn luyện với tên đặc trưng
         X_test_np = X_test
     
     # Xử lý dự đoán
@@ -105,24 +120,24 @@ def evaluate_model(model, X_test, y_test, model_name, dataset_name):
 
 # Đường dẫn đến các mô hình
 model_paths = {
-    'CDD_SVM': r'CDD_Model\svm_model_CDD(CV).pkl',
-    'CDD_RF': r'CDD_Model\random_forest_model_CDD(CV).pkl',
-    'CDD_XGB': r'CDD_Model\xgboost_model_CDD(no_CV(1)).json',
-    'UCI_SVM': r'UCI_Model\svm_model_ML(2).pkl',
-    'UCI_RF': r'UCI_Model\random_forest_model_UCI(CV).pkl',
-    'UCI_XGB': r'UCI_Model\xgboost_model_UCI(have_CV(1)).json'
+    'CDD_SVM': r'CDD_Model\svm_model_CDD(final).pkl',
+    'CDD_LG': r'CDD_Model\logistic_regression_model_ML(CDD2).pkl',
+    'CDD_XGB': r'CDD_Model\xgboost_model_CDD(final).json',
+    'UCI_SVM': r'UCI_Model_300\svm_model_UCI(300).pkl',
+    'UCI_LG': r'UCI_Model_300\logistic_regression_model_ML(300).pkl',
+    'UCI_XGB': r'UCI_Model_300\xgboost_model_ML(300_UCI).json'
 }
 
 # Tải dữ liệu
 cdd_data = pd.read_csv(r'Data\Cardiovascular_Disease_Dataset.csv')
-uci_data = pd.read_csv(r'Data\heart (2).csv')
+uci_data = pd.read_csv(r'Data\heart.csv')
 
 # Kiểm tra nhãn để đảm bảo nhị phân
 print("Nhãn CDD duy nhất:", np.unique(cdd_data['target']))
 print("Nhãn UCI duy nhất:", np.unique(uci_data['target']))
 
 # Căn chỉnh đặc trưng
-cdd_X, cdd_y, uci_X, uci_y, common_features, cdd_X_for_uci, uci_model_features = align_features(cdd_data, uci_data)
+cdd_X, cdd_y, uci_X, uci_y, common_features, cdd_X_for_uci, uci_model_features, uci_X_for_cdd, cdd_model_features = align_features(cdd_data, uci_data)
 
 # Chuẩn bị để lưu kết quả
 results = []
@@ -137,13 +152,20 @@ for model_name, model_path in model_paths.items():
         model.load_model(model_path)
         # Chuyển dữ liệu sang DMatrix để XGBoost
         X_cdd_dmatrix = xgb.DMatrix(cdd_X, feature_names=common_features)
-        X_uci_dmatrix = xgb.DMatrix(uci_X, feature_names=common_features)
+        X_uci_dmatrix = xgb.DMatrix(uci_X, feature_names=common_features)  # Sử dụng uci_X (12 đặc trưng) cho CDD_XGB
         X_cdd_dmatrix_for_uci = xgb.DMatrix(cdd_X_for_uci, feature_names=uci_model_features)
     else:
         model = joblib.load(model_path)
         X_cdd_dmatrix = cdd_X
-        X_uci_dmatrix = uci_X
+        if 'SVM' in model_name and 'CDD' in model_name:
+            X_uci_dmatrix = uci_X_for_cdd  # Sử dụng uci_X_for_cdd (13 đặc trưng) cho CDD_SVM
+        else:
+            X_uci_dmatrix = uci_X  # Sử dụng uci_X (12 đặc trưng) cho CDD_RF và các mô hình khác
         X_cdd_dmatrix_for_uci = cdd_X_for_uci
+    
+    # Kiểm tra số đặc trưng của mô hình
+    if hasattr(model, 'n_features_in_'):
+        print(f"Số đặc trưng kỳ vọng của {model_name}: {model.n_features_in_}")
     
     # Đánh giá cross-dataset
     if model_name.startswith('CDD'):
@@ -157,41 +179,9 @@ for model_name, model_path in model_paths.items():
 
 # Lưu kết quả vào file CSV
 results_df = pd.DataFrame(results)
-results_df.to_csv('cross_dataset_evaluation_results.csv', index=False)
+results_df.to_csv('cross_dataset_evaluation_results(4).csv', index=False)
 print("Kết quả đã được lưu vào 'cross_dataset_evaluation_results.csv'")
 
 # Hiển thị kết quả
 print("\nKết quả đánh giá:")
 print(results_df)
-
-# Xác định feature quan trọng
-import matplotlib.pyplot as plt
-
-# Cho Random Forest và XGBoost
-def plot_feature_importances(model, feature_names, model_name):
-    if hasattr(model, 'feature_importances_'):
-        importances = model.feature_importances_
-    elif isinstance(model, xgb.Booster):
-        importances = model.get_score(importance_type='weight')
-        importances = {feature: importances.get(feature, 0) for feature in feature_names}
-        importances = np.array(list(importances.values()))
-    else:
-        print(f"Model {model_name} không hỗ trợ feature importance.")
-        return
-
-    sorted_idx = np.argsort(importances)[::-1]
-    top_features = [feature_names[i] for i in sorted_idx[:10]]  # Top 10 features
-    top_importances = importances[sorted_idx[:10]]
-    
-    plt.figure(figsize=(10,6))
-    plt.barh(top_features[::-1], top_importances[::-1])  # plot ngược cho đẹp
-    plt.xlabel('Feature Importance')
-    plt.title(f'Feature Importance - {model_name}')
-    plt.show()
-    
-    # In ra bảng luôn cho dễ copy
-    for f, imp in zip(top_features, top_importances):
-        print(f"{f}: {imp:.4f}")
-
-# Ví dụ sử dụng:
-plot_feature_importances(model, common_features, model_name)
